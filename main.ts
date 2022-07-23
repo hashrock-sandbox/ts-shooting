@@ -64,6 +64,13 @@ function createBulletInstance(x: number, y: number) {
   bullet.x = x;
   bullet.y = y;
   bullet.collisionSize = 8;
+
+  bullet.addEventListener("hit", () => {
+    bullet.destroy();
+  });
+  bullet.addEventListener("destroy", () => {
+  });
+
   return bullet;
 }
 
@@ -86,6 +93,11 @@ function createExplosionInstance(x: number, y: number) {
   explosion.scale = 2;
   explosion.x = x;
   explosion.y = y;
+
+  explosion.addEventListener("animationEnd", () => {
+    explosion.destroy();
+  });
+
   return explosion;
 }
 
@@ -220,6 +232,7 @@ function frame(delta: number) {
 
   bulletsPool.cleanUp();
   enemyPool.cleanUp();
+  explosionPool.cleanUp();
 
   canv.present();
   tick();
@@ -233,7 +246,7 @@ let lastTime = performance.now();
 let coolDown = 0;
 const coolDownTime = 50;
 const bulletsPool = new ObjectPool<Bullet>();
-const bulletsMax = 2;
+const bulletsMax = 2 * 3;
 
 const enemyPool = new ObjectPool<Enemy>();
 
@@ -265,12 +278,12 @@ for (const event of window.events()) {
         coolDown <= 0 &&
         bulletsPool.pool.length < bulletsMax
       ) {
-        const bullet = createBulletInstance(deno.x + 50, deno.y);
-        bullet.addEventListener("hit", () => {
-          bullet.destroy();
-        });
-        bullet.addEventListener("destroy", () => {});
-        bulletsPool.add(bullet);
+        const bullet1 = createBulletInstance(deno.x + 40, deno.y - 20);
+        const bullet2 = createBulletInstance(deno.x + 50, deno.y);
+        const bullet3 = createBulletInstance(deno.x + 40, deno.y + 20);
+        bulletsPool.add(bullet1);
+        bulletsPool.add(bullet2);
+        bulletsPool.add(bullet3);
         coolDown = coolDownTime;
       }
       coolDown -= delta;

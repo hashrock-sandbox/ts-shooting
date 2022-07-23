@@ -11,7 +11,7 @@ export interface Point {
   x: number;
   y: number;
 }
-type SpriteEvent = "hit" | "destroy";
+type SpriteEvent = "hit" | "destroy" | "animationEnd";
 
 export class Sprite {
   onHit() {
@@ -22,6 +22,11 @@ export class Sprite {
   onDestroy(): void {
     if (this.eventListeners["destroy"]) {
       this.eventListeners.destroy();
+    }
+  }
+  onAnimationEnd() {
+    if (this.eventListeners["animationEnd"]) {
+      this.eventListeners.animationEnd();
     }
   }
   x = 0;
@@ -78,6 +83,10 @@ export class Sprite {
     this.aliveTime += delta;
     this.index =
       Math.floor(this.aliveTime / this.animationSpeed) % this.frames.length;
+
+    if (Math.floor(this.aliveTime / this.animationSpeed) >= this.frames.length) {
+      this.onAnimationEnd();
+    }
   }
 
   wrap(rect: Area) {
