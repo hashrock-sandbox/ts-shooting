@@ -1,4 +1,10 @@
-import { Canvas, EventType, Rect, Surface, WindowBuilder } from "https://deno.land/x/sdl2@0.5.1/mod.ts";
+import {
+  Canvas,
+  EventType,
+  Rect,
+  Surface,
+  WindowBuilder,
+} from "https://deno.land/x/sdl2@0.5.1/mod.ts";
 import { FPS } from "https://deno.land/x/sdl2@0.5.1/examples/utils.ts";
 import { Bullet, Enemy, Explosion, Sprite } from "./util.ts";
 
@@ -6,7 +12,7 @@ const canvasSize = { width: 640, height: 480 };
 const window = new WindowBuilder(
   "Deno Shooting",
   canvasSize.width,
-  canvasSize.height,
+  canvasSize.height
 ).build();
 const canv = window.canvas();
 
@@ -18,20 +24,17 @@ const texture = creator.createTextureFromSurface(surface);
 const bgTexture = creator.createTextureFromSurface(bgSurface);
 const tick = FPS();
 
-const denoTextureFrames = [
-  new Rect(0, 0, 40, 32),
-  new Rect(40, 0, 40, 32),
-];
+const denoTextureFrames = [new Rect(0, 0, 40, 32), new Rect(40, 0, 40, 32)];
 
 const bulletFrame = new Rect(120, 96, 24, 24);
-const missileFrames = [
-  new Rect(48, 96, 24, 24),
-  new Rect(72, 96, 24, 24),
-]
-const bugFrames = [
-  new Rect(0, 96, 24, 24),
-  new Rect(24, 96, 24, 24),
-]
+const missileFrames = [new Rect(48, 96, 24, 24), new Rect(72, 96, 24, 24)];
+const bugFrames = [new Rect(0, 96, 24, 24), new Rect(24, 96, 24, 24)];
+const explosionFrames = [
+  new Rect(0, 120, 24, 24),
+  new Rect(24, 120, 24, 24),
+  new Rect(48, 120, 24, 24),
+  new Rect(72, 120, 24, 24),
+];
 
 function random(min: number, max: number) {
   return (Math.random() * (max - min) + min) | 0;
@@ -40,8 +43,8 @@ function random(min: number, max: number) {
 function createDenoInstance(x: number, y: number) {
   const origin = {
     x: 0,
-    y: 8
-  }
+    y: 8,
+  };
   const deno = new Sprite(texture, denoTextureFrames, origin);
   deno.class = "deno";
   deno.x = x;
@@ -64,7 +67,7 @@ function createBulletInstance(x: number, y: number) {
   return bullet;
 }
 
-function createBugInstance(x: number, y: number ){
+function createBugInstance(x: number, y: number) {
   const bug = new Enemy(texture, bugFrames);
   bug.class = "bug";
   bug.scale = 2;
@@ -73,50 +76,58 @@ function createBugInstance(x: number, y: number ){
   bug.x = x;
   bug.y = y;
   bug.collisionSize = 8;
+  bug.hp = 10;
   return bug;
 }
 
+function createExplosionInstance(x: number, y: number) {
+  const explosion = new Explosion(texture, explosionFrames);
+  explosion.class = "explosion";
+  explosion.scale = 2;
+  explosion.x = x;
+  explosion.y = y;
+  return explosion;
+}
 
 const deno = createDenoInstance(100, 200);
 
 let cnt = 0;
-const speed = 400
+const speed = 400;
 const scrollSpeed = 100;
 const KEYMAP = {
-  "ArrowUp": 82,
-  "ArrowDown": 81,
-  "ArrowLeft": 80,
-  "ArrowRight": 79,
-  "Z": 29,
-  "Space": 44
-}
+  ArrowUp: 82,
+  ArrowDown: 81,
+  ArrowLeft: 80,
+  ArrowRight: 79,
+  Z: 29,
+  Space: 44,
+};
 
 class ObjectPool<T extends Sprite> {
   cleanUp() {
-    const destroyed = this.pool.filter(s => s.destroyFlag);
-    destroyed.forEach(s => s.onDestroy());
+    const destroyed = this.pool.filter((s) => s.destroyFlag);
+    destroyed.forEach((s) => s.onDestroy());
 
-
-    this.pool = this.pool.filter(s => s.destroyFlag === false);
-  } 
+    this.pool = this.pool.filter((s) => s.destroyFlag === false);
+  }
   pool: T[] = [];
-  
+
   add(sprite: T) {
     this.pool.push(sprite);
   }
   remove(sprite: T) {
-    this.pool = this.pool.filter(s => s !== sprite);
+    this.pool = this.pool.filter((s) => s !== sprite);
   }
   tickAll(delta: number) {
-    this.pool.forEach(s => s.tick(delta));
+    this.pool.forEach((s) => s.tick(delta));
   }
 
   drawAll(dest: Canvas) {
-    this.pool.forEach(s => s.draw(dest));
+    this.pool.forEach((s) => s.draw(dest));
   }
 
   removeOutOfBound(rect: Rect) {
-    this.pool = this.pool.filter(s => {
+    this.pool = this.pool.filter((s) => {
       if (s.x < rect.x || s.x > rect.x + rect.width) {
         return false;
       }
@@ -134,36 +145,36 @@ class KeyboardStack {
     return this._keys.has(keycode);
   }
 
-  down(keycode: number){
+  down(keycode: number) {
     this._keys.add(keycode);
   }
-  up(keycode: number){
+  up(keycode: number) {
     this._keys.delete(keycode);
   }
 
-  get arrowUp(){
+  get arrowUp() {
     return this.isDown(KEYMAP.ArrowUp);
   }
-  get arrowDown(){
+  get arrowDown() {
     return this.isDown(KEYMAP.ArrowDown);
   }
-  get arrowLeft(){
+  get arrowLeft() {
     return this.isDown(KEYMAP.ArrowLeft);
   }
-  get arrowRight(){
+  get arrowRight() {
     return this.isDown(KEYMAP.ArrowRight);
   }
-  get primary(){
+  get primary() {
     return this.isDown(KEYMAP.Z) || this.isDown(KEYMAP.Space);
   }
 }
 
-function checkCollision<T extends Sprite>(a: ObjectPool<T>, b: ObjectPool<T>){
-  a.pool.forEach(a => {
-    b.pool.forEach(b => {
-      if(a.isHit(b)){
-        a.onHit(b);
-        b.onHit(a);
+function checkCollision<T extends Sprite>(a: ObjectPool<T>, b: ObjectPool<T>) {
+  a.pool.forEach((a) => {
+    b.pool.forEach((b) => {
+      if (a.isHit(b)) {
+        a.onHit();
+        b.onHit();
       }
     });
   });
@@ -172,10 +183,26 @@ function checkCollision<T extends Sprite>(a: ObjectPool<T>, b: ObjectPool<T>){
 function frame(delta: number) {
   canv.clear();
 
-  scrollX = scrollX + scrollSpeed * delta / 1000;
-  canv.copy(bgTexture, new Rect(0, 0, canvasSize.width, canvasSize.height), new Rect(-scrollX, 0, canvasSize.width, canvasSize.height));
-  canv.copy(bgTexture, new Rect(0, 0, canvasSize.width, canvasSize.height), new Rect(-scrollX + canvasSize.width, 0, canvasSize.width, canvasSize.height));
+  scrollX = scrollX + (scrollSpeed * delta) / 1000;
+  canv.copy(
+    bgTexture,
+    new Rect(0, 0, canvasSize.width, canvasSize.height),
+    new Rect(-scrollX, 0, canvasSize.width, canvasSize.height)
+  );
+  canv.copy(
+    bgTexture,
+    new Rect(0, 0, canvasSize.width, canvasSize.height),
+    new Rect(
+      -scrollX + canvasSize.width,
+      0,
+      canvasSize.width,
+      canvasSize.height
+    )
+  );
   scrollX = scrollX % canvasSize.width;
+
+  explosionPool.tickAll(delta);
+  explosionPool.drawAll(canv);
 
   deno.tick(delta);
   deno.draw(canv);
@@ -185,7 +212,9 @@ function frame(delta: number) {
 
   bulletsPool.tickAll(delta);
   bulletsPool.drawAll(canv);
-  bulletsPool.removeOutOfBound(new Rect(0, 0, canvasSize.width, canvasSize.height));
+  bulletsPool.removeOutOfBound(
+    new Rect(0, 0, canvasSize.width, canvasSize.height)
+  );
 
   checkCollision(enemyPool, bulletsPool);
 
@@ -193,11 +222,11 @@ function frame(delta: number) {
   enemyPool.cleanUp();
 
   canv.present();
-  tick()
+  tick();
 }
 
 let scrollX = 0;
-const keyboard = new KeyboardStack()
+const keyboard = new KeyboardStack();
 let time = 0;
 let lastTime = performance.now();
 
@@ -206,49 +235,66 @@ const coolDownTime = 50;
 const bulletsPool = new ObjectPool<Bullet>();
 const bulletsMax = 2;
 
-
 const enemyPool = new ObjectPool<Enemy>();
 
 const explosionPool = new ObjectPool<Explosion>();
 
-
 for (const event of window.events()) {
   const now = performance.now();
   const delta = now - lastTime;
-  const speedDelta = delta / 1000 * speed;
+  const speedDelta = (delta / 1000) * speed;
 
   switch (event.type) {
     case EventType.Draw:
       frame(delta);
-      time++
-      if(keyboard.arrowUp){
+      time++;
+      if (keyboard.arrowUp) {
         deno.y -= speedDelta;
       }
-      if(keyboard.arrowDown){
+      if (keyboard.arrowDown) {
         deno.y += speedDelta;
       }
-      if(keyboard.arrowLeft){
+      if (keyboard.arrowLeft) {
         deno.x -= speedDelta;
       }
-      if(keyboard.arrowRight){
+      if (keyboard.arrowRight) {
         deno.x += speedDelta;
       }
-      if(keyboard.primary && coolDown <= 0 && bulletsPool.pool.length < bulletsMax){
+      if (
+        keyboard.primary &&
+        coolDown <= 0 &&
+        bulletsPool.pool.length < bulletsMax
+      ) {
         const bullet = createBulletInstance(deno.x + 50, deno.y);
+        bullet.addEventListener("hit", () => {
+          bullet.destroy();
+        });
+        bullet.addEventListener("destroy", () => {});
         bulletsPool.add(bullet);
         coolDown = coolDownTime;
       }
       coolDown -= delta;
 
-      if(time % 500 === 0){
+      if (time % 500 === 0) {
         deno.index = (deno.index + 1) % deno.frames.length;
       }
 
-      if(time % 10000 === 0){
-        const bug = createBugInstance( canvasSize.width, random(0, canvasSize.height));
-        bug.onDestroy = (self: Enemy) => {
-          explosionPool.add( createExplosion(self.x, self.y));
-        }
+      if (time % 10000 === 0) {
+        const bug = createBugInstance(
+          canvasSize.width,
+          random(0, canvasSize.height)
+        );
+        bug.addEventListener("hit", () => {
+          bug.hp -= 1;
+          if (bug.hp <= 0) {
+            bug.destroy();
+          }
+        });
+        bug.addEventListener("destroy", () => {
+          const explosion = createExplosionInstance(bug.x, bug.y);
+          explosionPool.add(explosion);
+        });
+
         enemyPool.add(bug);
       }
 
@@ -266,8 +312,4 @@ for (const event of window.events()) {
     default:
       break;
   }
-}
-
-function createExplosion(x: number,y: number): Explosion {
-throw new Error("Function not implemented.");
 }
