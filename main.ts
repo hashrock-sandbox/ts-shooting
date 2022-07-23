@@ -45,7 +45,7 @@ const deno = createDenoInstance();
 
 let cnt = 0;
 const speed = 400
-
+const scrollSpeed = 100;
 const KEYMAP = {
   "ArrowUp": 82,
   "ArrowDown": 81,
@@ -98,7 +98,11 @@ class KeyboardStack {
 
 function frame(delta: number) {
   canv.clear();
-  canv.copy(bgTexture);
+
+  scrollX = scrollX + scrollSpeed * delta / 1000;
+  canv.copy(bgTexture, new Rect(0, 0, canvasSize.width, canvasSize.height), new Rect(-scrollX, 0, canvasSize.width, canvasSize.height));
+  canv.copy(bgTexture, new Rect(0, 0, canvasSize.width, canvasSize.height), new Rect(-scrollX + canvasSize.width, 0, canvasSize.width, canvasSize.height));
+  scrollX = scrollX % canvasSize.width;
 
   deno.tick();
   deno.draw(canv);
@@ -107,7 +111,7 @@ function frame(delta: number) {
   tick()
 }
 
-
+let scrollX = 0;
 const keyboard = new KeyboardStack()
 let time = 0;
 let lastTime = performance.now();
