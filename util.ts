@@ -18,6 +18,7 @@ export class Sprite {
   scale = 1;
   texture: Texture;
   frames: Rect[];
+  class = "";
   index = 0;
 
   constructor(texture: Texture, frames: Rect[]) {

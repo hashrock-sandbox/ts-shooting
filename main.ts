@@ -1,4 +1,4 @@
-import { EventType, Rect, Surface, WindowBuilder } from "https://deno.land/x/sdl2@0.5.1/mod.ts";
+import { Canvas, EventType, Rect, Surface, WindowBuilder } from "https://deno.land/x/sdl2@0.5.1/mod.ts";
 import { FPS } from "https://deno.land/x/sdl2@0.5.1/examples/utils.ts";
 import { Sprite } from "./util.ts";
 
@@ -18,6 +18,7 @@ const tick = FPS();
 
 const denoTextureFrames = [
   new Rect(0, 0, 40, 32),
+  new Rect(40, 0, 40, 32),
 ];
 
 
@@ -27,6 +28,7 @@ function random(min: number, max: number) {
 
 function createDenoInstance() {
   const deno = new Sprite(texture, denoTextureFrames);
+  deno.class = "deno";
   deno.x = random(0, canvasSize.width);
   deno.y = random(0, canvasSize.height);
   deno.originX = deno.frames[0].width / 2;
@@ -47,6 +49,21 @@ const KEYMAP = {
   "ArrowDown": 81,
   "ArrowLeft": 80,
   "ArrowRight": 79,
+}
+
+class ObjectPool { 
+  pool: Sprite[] = [];
+  
+  add(sprite: Sprite) {
+    this.pool.push(sprite);
+  }
+  remove(sprite: Sprite) {
+    this.pool = this.pool.filter(s => s !== sprite);
+  }
+
+  drawAll(dest: Canvas) {
+    this.pool.forEach(s => s.draw(dest));
+  }
 }
 
 class KeyboardStack {
@@ -88,11 +105,13 @@ function frame() {
 
 
 const keyboard = new KeyboardStack()
+let time = 0;
 
 for (const event of window.events()) {
   switch (event.type) {
     case EventType.Draw:
       frame();
+      time++
       if(keyboard.arrowUp){
         deno.y -= speed;
       }
@@ -104,6 +123,10 @@ for (const event of window.events()) {
       }
       if(keyboard.arrowRight){
         deno.x += speed;
+      }
+
+      if(time % 500 === 0){
+        deno.index = (deno.index + 1) % deno.frames.length;
       }
       break;
     case EventType.Quit:
