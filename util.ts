@@ -7,6 +7,11 @@ export interface Area {
   height: number;
 }
 
+export interface Point{
+  x: number;
+  y: number;
+}
+
 export class Sprite {
   x = 0;
   y = 0;
@@ -21,9 +26,17 @@ export class Sprite {
   class = "";
   index = 0;
 
-  constructor(texture: Texture, frames: Rect[]) {
+  constructor(texture: Texture, frames: Rect[], origin?: Point) {
     this.texture = texture;
     this.frames = frames;
+    if (origin) {
+      this.originX = this.frames[0].width / 2 + origin.x;
+      this.originY = this.frames[0].height + origin.y;
+    } else {
+      // default origin is center
+      this.originX = this.frames[0].width / 2;
+      this.originY = this.frames[0].height;
+    }
   }
 
   draw(dest: Canvas) {

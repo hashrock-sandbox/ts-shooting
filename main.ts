@@ -24,37 +24,47 @@ const denoTextureFrames = [
 ];
 
 const bulletFrame = new Rect(120, 96, 24, 24);
+const missileFrames = [
+  new Rect(48, 96, 24, 24),
+  new Rect(72, 96, 24, 24),
+]
+const bugFrames = [
+  new Rect(0, 96, 24, 24),
+  new Rect(24, 96, 24, 24),
+]
 
 function random(min: number, max: number) {
   return (Math.random() * (max - min) + min) | 0;
 }
 
-function createDenoInstance() {
-  const deno = new Sprite(texture, denoTextureFrames);
+function createDenoInstance(x: number, y: number) {
+  const origin = {
+    x: 0,
+    y: 8
+  }
+  const deno = new Sprite(texture, denoTextureFrames, origin);
   deno.class = "deno";
-  deno.x = random(0, canvasSize.width);
-  deno.y = random(0, canvasSize.height);
-  deno.originX = deno.frames[0].width / 2;
-  deno.originY = deno.frames[0].height + 8;
+  deno.x = x;
+  deno.y = y;
   deno.scale = 2;
   deno.vx = 0;
   deno.vy = 0;
   return deno;
 }
 
-function createBulletInstance(){
+function createBulletInstance(x: number, y: number) {
   const bullet = new Sprite(texture, [bulletFrame]);
   bullet.class = "bullet";
-  bullet.originX = bullet.frames[0].width / 2;
-  bullet.originY = bullet.frames[0].height;
   bullet.scale = 2;
   bullet.vx = 1500;
   bullet.vy = 0;
+  bullet.x = x;
+  bullet.y = y;
   return bullet;
 }
 
 
-const deno = createDenoInstance();
+const deno = createDenoInstance(100, 200);
 
 let cnt = 0;
 const speed = 400
@@ -180,9 +190,7 @@ for (const event of window.events()) {
         deno.x += speedDelta;
       }
       if(keyboard.primary && coolDown <= 0 && bulletsPool.pool.length < bulletsMax){
-        const bullet = createBulletInstance();
-        bullet.x = deno.x + 50;
-        bullet.y = deno.y;
+        const bullet = createBulletInstance(deno.x + 50, deno.y);
         bulletsPool.add(bullet);
         coolDown = coolDownTime;
       }
