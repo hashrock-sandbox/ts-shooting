@@ -11,9 +11,11 @@ const window = new WindowBuilder(
 const canv = window.canvas();
 
 const surface = Surface.fromFile("./assets/sprite-stg.png");
+const bgSurface = Surface.fromFile("./assets/bg.png");
 
 const creator = canv.textureCreator();
 const texture = creator.createTextureFromSurface(surface);
+const bgTexture = creator.createTextureFromSurface(bgSurface);
 const tick = FPS();
 
 const denoTextureFrames = [
@@ -42,7 +44,7 @@ function createDenoInstance() {
 const deno = createDenoInstance();
 
 let cnt = 0;
-const speed = 0.1
+const speed = 400
 
 const KEYMAP = {
   "ArrowUp": 82,
@@ -94,8 +96,10 @@ class KeyboardStack {
 }
 
 
-function frame() {
+function frame(delta: number) {
   canv.clear();
+  canv.copy(bgTexture);
+
   deno.tick();
   deno.draw(canv);
 
@@ -106,28 +110,35 @@ function frame() {
 
 const keyboard = new KeyboardStack()
 let time = 0;
+let lastTime = performance.now();
 
 for (const event of window.events()) {
+  const now = performance.now();
+  const delta = now - lastTime;
+  const speedDelta = delta / 1000 * speed;
+
   switch (event.type) {
     case EventType.Draw:
-      frame();
+      frame(delta);
       time++
       if(keyboard.arrowUp){
-        deno.y -= speed;
+        deno.y -= speedDelta;
       }
       if(keyboard.arrowDown){
-        deno.y += speed;
+        deno.y += speedDelta;
       }
       if(keyboard.arrowLeft){
-        deno.x -= speed;
+        deno.x -= speedDelta;
       }
       if(keyboard.arrowRight){
-        deno.x += speed;
+        deno.x += speedDelta;
       }
 
       if(time % 500 === 0){
         deno.index = (deno.index + 1) % deno.frames.length;
       }
+
+      lastTime = now;
       break;
     case EventType.Quit:
       Deno.exit(0);
