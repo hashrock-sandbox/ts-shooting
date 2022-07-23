@@ -6,7 +6,7 @@ import {
   WindowBuilder,
 } from "https://deno.land/x/sdl2@0.5.1/mod.ts";
 import { FPS } from "https://deno.land/x/sdl2@0.5.1/examples/utils.ts";
-import { Bullet, Enemy, Explosion, Sprite } from "./util.ts";
+import { Bullet, Enemy, EnemyBullet, Explosion, Sprite } from "./util.ts";
 
 const canvasSize = { width: 640, height: 480 };
 const window = new WindowBuilder(
@@ -27,6 +27,7 @@ const tick = FPS();
 const denoTextureFrames = [new Rect(0, 0, 40, 32), new Rect(40, 0, 40, 32)];
 
 const bulletFrame = new Rect(120, 96, 24, 24);
+const enemyBulletFrame = new Rect(96, 96, 24, 24);
 const missileFrames = [new Rect(48, 96, 24, 24), new Rect(72, 96, 24, 24)];
 const bugFrames = [new Rect(0, 96, 24, 24), new Rect(24, 96, 24, 24)];
 const explosionFrames = [
@@ -86,6 +87,20 @@ function createBugInstance(x: number, y: number) {
   bug.hp = 10;
   return bug;
 }
+
+
+function createEnemyBulletInstance(x: number,y: number) {
+  const enemyBullet = new EnemyBullet(texture, [enemyBulletFrame]);
+  enemyBullet.class = "enemyBullet";
+  enemyBullet.scale = 2;
+  enemyBullet.vx = 0;
+  enemyBullet.vy = 0;
+  enemyBullet.x = x;
+  enemyBullet.y = y;
+  enemyBullet.collisionSize = 8;
+  return enemyBullet;
+}
+  
 
 function createExplosionInstance(x: number, y: number) {
   const explosion = new Explosion(texture, explosionFrames);
@@ -227,11 +242,24 @@ function frame(delta: number) {
     new Rect(0, 0, canvasSize.width, canvasSize.height)
   );
 
+  enemyBulletPool.tickAll(delta);
+  enemyBulletPool.drawAll(canv);
+  enemyBulletPool.removeOutOfBound(
+    new Rect(0, 0, canvasSize.width, canvasSize.height)
+  );
+
   checkCollision(enemyPool, bulletsPool);
+  enemyBulletPool.pool.forEach((b) => {
+    if (b.isHit(deno)) {
+      deno.onHit();
+      b.onHit();
+    }
+  });
 
   bulletsPool.cleanUp();
   enemyPool.cleanUp();
   explosionPool.cleanUp();
+  enemyBulletPool.cleanUp();
 
   canv.present();
   tick();
@@ -248,7 +276,7 @@ const bulletsPool = new ObjectPool<Bullet>();
 const bulletsMax = 2 * 3;
 
 const enemyPool = new ObjectPool<Enemy>();
-
+const enemyBulletPool = new ObjectPool<EnemyBullet>();
 const explosionPool = new ObjectPool<Explosion>();
 
 for (const event of window.events()) {
@@ -306,7 +334,14 @@ for (const event of window.events()) {
           const explosion = createExplosionInstance(bug.x, bug.y);
           explosionPool.add(explosion);
         });
+        bug.addEventListener("timer1", () => {
+          const bullet = createEnemyBulletInstance(bug.x, bug.y);
+          const direction = Math.atan2(deno.y - bug.y, deno.x - bug.x);
+          bullet.vx = Math.cos(direction) * 400;
+          bullet.vy = Math.sin(direction) * 400;
 
+          enemyBulletPool.add(bullet);
+        });
         enemyPool.add(bug);
       }
 

@@ -11,7 +11,7 @@ export interface Point {
   x: number;
   y: number;
 }
-type SpriteEvent = "hit" | "destroy" | "animationEnd";
+type SpriteEvent = "hit" | "destroy" | "animationEnd" | "timer1" | "timer2" | "timer3";
 
 export class Sprite {
   onHit() {
@@ -27,6 +27,11 @@ export class Sprite {
   onAnimationEnd() {
     if (this.eventListeners["animationEnd"]) {
       this.eventListeners.animationEnd();
+    }
+  }
+  onTimer1() {
+    if (this.eventListeners["timer1"]) {
+      this.eventListeners.timer1();
     }
   }
   x = 0;
@@ -87,6 +92,14 @@ export class Sprite {
     if (Math.floor(this.aliveTime / this.animationSpeed) >= this.frames.length) {
       this.onAnimationEnd();
     }
+
+    if(this.aliveTime > 2000) {
+      this.onTimer1()
+      this.removeEventListener("timer1")
+    }
+  }
+  removeEventListener(arg0: string) {
+    delete this.eventListeners[arg0];
   }
 
   wrap(rect: Area) {
@@ -115,7 +128,9 @@ export class Enemy extends Sprite {
     super.tick(delta);
     this.vy = Math.sin(this.aliveTime / 100) * 50;
   }
-      
+}
+
+export class EnemyBullet extends Sprite {
 
 }
 
