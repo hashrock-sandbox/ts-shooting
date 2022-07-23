@@ -42,6 +42,13 @@ const deno = createDenoInstance();
 let cnt = 0;
 const speed = 0.1
 
+const KEYMAP = {
+  "ArrowUp": 82,
+  "ArrowDown": 81,
+  "ArrowLeft": 80,
+  "ArrowRight": 79,
+}
+
 class KeyboardStack {
   _keys: Set<number> = new Set();
   isDown(keycode: number) {
@@ -53,6 +60,19 @@ class KeyboardStack {
   }
   up(keycode: number){
     this._keys.delete(keycode);
+  }
+
+  get arrowUp(){
+    return this.isDown(KEYMAP.ArrowUp);
+  }
+  get arrowDown(){
+    return this.isDown(KEYMAP.ArrowDown);
+  }
+  get arrowLeft(){
+    return this.isDown(KEYMAP.ArrowLeft);
+  }
+  get arrowRight(){
+    return this.isDown(KEYMAP.ArrowRight);
   }
 }
 
@@ -66,25 +86,23 @@ function frame() {
   tick()
 }
 
-let keyUp = false; //
-let keyDown = false; //
-let keyLeft = false; //
-let keyRight = false; //
+
+const keyboard = new KeyboardStack()
 
 for (const event of window.events()) {
   switch (event.type) {
     case EventType.Draw:
       frame();
-      if(keyUp){
+      if(keyboard.arrowUp){
         deno.y -= speed;
       }
-      if(keyDown){
+      if(keyboard.arrowDown){
         deno.y += speed;
       }
-      if(keyLeft){
+      if(keyboard.arrowLeft){
         deno.x -= speed;
       }
-      if(keyRight){
+      if(keyboard.arrowRight){
         deno.x += speed;
       }
       break;
@@ -92,34 +110,10 @@ for (const event of window.events()) {
       Deno.exit(0);
       break;
     case EventType.KeyUp:
-      const keycode2 = event.keysym.scancode
-      if (keycode2 === 80) {
-        keyLeft = false;
-      }
-      if (keycode2 === 82) {
-        keyUp = false
-      }
-      if (keycode2 === 79) {
-        keyRight = false
-      }
-      if (keycode2 === 81) {
-        keyDown = false
-      }
+      keyboard.up(event.keysym.scancode);
       break;
     case EventType.KeyDown:
-      const keycode = event.keysym.scancode
-      if (keycode === 80) {
-        keyLeft = true;
-      }
-      if (keycode === 82) {
-        keyUp = true
-      }
-      if (keycode === 79) {
-        keyRight = true
-      }
-      if (keycode === 81) {
-        keyDown = true
-      }
+      keyboard.down(event.keysym.scancode);
       break;
     default:
       break;
