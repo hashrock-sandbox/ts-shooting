@@ -109,6 +109,14 @@ export class Bullet extends Sprite {
 
 export class Enemy extends Sprite {
   hp = 0;
+
+
+  override tick(delta: number): void {
+    super.tick(delta);
+    this.vy = Math.sin(this.aliveTime / 100) * 50;
+  }
+      
+
 }
 
 export class Explosion extends Sprite {}
