@@ -36,7 +36,12 @@ const explosionFrames = [
   new Rect(48, 120, 24, 24),
   new Rect(72, 120, 24, 24),
 ];
-
+const bulletExplosionFrames = [
+  new Rect(96 , 120, 24, 24),
+  new Rect(120, 120, 24, 24),
+  new Rect(144, 120, 24, 24),
+  new Rect(168, 120, 24, 24),
+];
 function random(min: number, max: number) {
   return (Math.random() * (max - min) + min) | 0;
 }
@@ -68,8 +73,11 @@ function createBulletInstance(x: number, y: number) {
 
   bullet.addEventListener("hit", () => {
     bullet.destroy();
+
   });
   bullet.addEventListener("destroy", () => {
+    const exp = createBulletExplosionInstance(bullet.x, bullet.y);
+    explosionPool.add(exp);
   });
 
   return bullet;
@@ -101,6 +109,20 @@ function createEnemyBulletInstance(x: number,y: number) {
   return enemyBullet;
 }
   
+function createBulletExplosionInstance(x: number, y: number) {
+  const explosion = new Explosion(texture, bulletExplosionFrames);
+  explosion.class = "explosion";
+  explosion.scale = 2;
+  explosion.x = x;
+  explosion.y = y;
+
+  explosion.addEventListener("animationEnd", () => {
+    explosion.destroy();
+  });
+
+  return explosion;
+}
+
 
 function createExplosionInstance(x: number, y: number) {
   const explosion = new Explosion(texture, explosionFrames);
@@ -227,8 +249,6 @@ function frame(delta: number) {
   );
   scrollX = scrollX % canvasSize.width;
 
-  explosionPool.tickAll(delta);
-  explosionPool.drawAll(canv);
 
   deno.tick(delta);
   deno.draw(canv);
@@ -241,6 +261,8 @@ function frame(delta: number) {
   bulletsPool.removeOutOfBound(
     new Rect(0, 0, canvasSize.width, canvasSize.height)
   );
+  explosionPool.tickAll(delta);
+  explosionPool.drawAll(canv);
 
   enemyBulletPool.tickAll(delta);
   enemyBulletPool.drawAll(canv);
