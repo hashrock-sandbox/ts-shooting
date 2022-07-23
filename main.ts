@@ -90,6 +90,10 @@ class ObjectPool {
       if (s.x < rect.x || s.x > rect.x + rect.width) {
         return false;
       }
+      if (s.y < rect.y || s.y > rect.y + rect.height) {
+        return false;
+      }
+      return true;
     });
   }
 }
@@ -138,9 +142,7 @@ function frame(delta: number) {
 
   bulletsPool.tickAll(delta);
   bulletsPool.drawAll(canv);
-  // console.log(bulletsPool.pool);
-  // bulletsPool.removeOutOfBound(new Rect(0, 0, canvasSize.width, canvasSize.height));
-  // console.log(bulletsPool.pool);
+  bulletsPool.removeOutOfBound(new Rect(0, 0, canvasSize.width, canvasSize.height));
 
   canv.present();
   tick()
@@ -152,8 +154,9 @@ let time = 0;
 let lastTime = performance.now();
 
 let coolDown = 0;
-const coolDownTime = 200;
+const coolDownTime = 50;
 const bulletsPool = new ObjectPool();
+const bulletsMax = 2;
 
 for (const event of window.events()) {
   const now = performance.now();
@@ -176,7 +179,7 @@ for (const event of window.events()) {
       if(keyboard.arrowRight){
         deno.x += speedDelta;
       }
-      if(keyboard.primary && coolDown <= 0){
+      if(keyboard.primary && coolDown <= 0 && bulletsPool.pool.length < bulletsMax){
         const bullet = createBulletInstance();
         bullet.x = deno.x + 50;
         bullet.y = deno.y;
