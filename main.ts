@@ -77,9 +77,20 @@ class ObjectPool {
   remove(sprite: Sprite) {
     this.pool = this.pool.filter(s => s !== sprite);
   }
+  tickAll(delta: number) {
+    this.pool.forEach(s => s.tick(delta));
+  }
 
   drawAll(dest: Canvas) {
     this.pool.forEach(s => s.draw(dest));
+  }
+
+  removeOutOfBound(rect: Rect) {
+    this.pool = this.pool.filter(s => {
+      if (s.x < rect.x || s.x > rect.x + rect.width) {
+        return false;
+      }
+    });
   }
 }
 
@@ -125,10 +136,11 @@ function frame(delta: number) {
   deno.tick(delta);
   deno.draw(canv);
 
-  bullets.forEach(b => {
-    b.tick(delta);
-    b.draw(canv);
-  });
+  bulletsPool.tickAll(delta);
+  bulletsPool.drawAll(canv);
+  // console.log(bulletsPool.pool);
+  // bulletsPool.removeOutOfBound(new Rect(0, 0, canvasSize.width, canvasSize.height));
+  // console.log(bulletsPool.pool);
 
   canv.present();
   tick()
@@ -139,9 +151,9 @@ const keyboard = new KeyboardStack()
 let time = 0;
 let lastTime = performance.now();
 
-const bullets: Sprite[] = [];
 let coolDown = 0;
 const coolDownTime = 200;
+const bulletsPool = new ObjectPool();
 
 for (const event of window.events()) {
   const now = performance.now();
@@ -168,7 +180,7 @@ for (const event of window.events()) {
         const bullet = createBulletInstance();
         bullet.x = deno.x + 50;
         bullet.y = deno.y;
-        bullets.push(bullet);
+        bulletsPool.add(bullet);
         coolDown = coolDownTime;
       }
       coolDown -= delta;
