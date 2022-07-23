@@ -7,36 +7,6 @@ export interface Area {
   height: number;
 }
 
-export function drawMap(
-  texture: Texture,
-  canvas: Canvas,
-  map: number[][],
-  chipSize: number,
-) {
-  for (let i = 0; i < map.length; i++) {
-    for (let j = 0; j < map[i].length; j++) {
-      const chip = map[i][j];
-      const src = new Rect(
-        (chip % 4) * chipSize,
-        ((chip / 4) | 0) * chipSize,
-        chipSize,
-        chipSize,
-      );
-      const dst = new Rect(
-        i * chipSize * 4,
-        j * chipSize * 4,
-        chipSize * 4,
-        chipSize * 4,
-      );
-      canvas.copy(
-        texture,
-        src,
-        dst,
-      );
-    }
-  }
-}
-
 export class Sprite {
   x = 0;
   y = 0;

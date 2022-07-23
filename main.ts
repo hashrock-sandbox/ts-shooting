@@ -1,10 +1,10 @@
 import { EventType, Rect, Surface, WindowBuilder } from "https://deno.land/x/sdl2@0.5.1/mod.ts";
 import { FPS } from "https://deno.land/x/sdl2@0.5.1/examples/utils.ts";
-import { drawMap, Sprite } from "./util.ts";
+import { Sprite } from "./util.ts";
 
-const canvasSize = { width: 400, height: 400 };
+const canvasSize = { width: 640, height: 480 };
 const window = new WindowBuilder(
-  "Hello, Deno!",
+  "Deno Shooting",
   canvasSize.width,
   canvasSize.height,
 ).build();
@@ -16,42 +16,13 @@ const creator = canv.textureCreator();
 const texture = creator.createTextureFromSurface(surface);
 const tick = FPS();
 
-const map = [
-  [8, 8, 9, 8, 11, 8, 8, 8],
-  [8, 8, 8, 8, 8, 8, 8, 8],
-  [8, 10, 8, 8, 8, 8, 8, 8],
-  [8, 8, 8, 8, 8, 8, 8, 8],
-  [8, 8, 8, 8, 8, 8, 10, 8],
-  [8, 8, 8, 8, 8, 9, 8, 8],
-  [10, 8, 8, 8, 8, 8, 8, 8],
-  [8, 8, 11, 8, 8, 8, 8, 8],
-];
-
 const denoTextureFrames = [
-  new Rect(0, 0, 16, 16),
-  new Rect(16, 0, 16, 16),
-  new Rect(32, 0, 16, 16),
-  new Rect(48, 0, 16, 16),
+  new Rect(0, 0, 40, 32),
 ];
 
-const shadowTexture = [
-  new Rect(0, 3 * 16, 16, 16),
-];
 
 function random(min: number, max: number) {
   return (Math.random() * (max - min) + min) | 0;
-}
-
-function createShadowInstance() {
-  const shadow = new Sprite(texture, shadowTexture);
-  shadow.x = 0;
-  shadow.y = 0;
-  shadow.originX = shadow.frames[0].width / 2 + 6;
-  shadow.originY = shadow.frames[0].height - 16;
-  shadow.scale = 4;
-  shadow.vx = 0;
-  shadow.vy = 0;
-  return shadow;
 }
 
 function createDenoInstance() {
@@ -60,74 +31,59 @@ function createDenoInstance() {
   deno.y = random(0, canvasSize.height);
   deno.originX = deno.frames[0].width / 2;
   deno.originY = deno.frames[0].height;
-  deno.scale = 4;
-  deno.vx = 0.02;
-  deno.vy = 0.01;
+  deno.scale = 2;
+  deno.vx = 0;
+  deno.vy = 0;
   return deno;
 }
 
-const denos: Sprite[] = [];
-
-for (let i = 0; i < 1; i++) {
-  denos.push(createDenoInstance());
-}
-
-const shadow = createShadowInstance();
+const deno = createDenoInstance();
 
 let cnt = 0;
+const speed = 0.05
 
 function frame() {
   canv.clear();
-  drawMap(texture, canv, map, 16);
-
-  for (const deno of denos) {
-    deno.tick();
-    shadow.draw(canv);
-    deno.draw(canv);
-
-    const margin = 48;
-    deno.wrap({
-      x: -margin,
-      y: -margin,
-      width: canvasSize.width + margin * 2,
-      height: canvasSize.height + margin * 2,
-    });
-
-    shadow.x = deno.x;
-    shadow.y = deno.y;
-
-    // make deno jump
-    deno.z = Math.abs(Math.sin(cnt / 10) * 16) | 0;
-
-    if ((cnt / 20 | 0) % 2 === 0) {
-      if (deno.vx > 0) {
-        deno.index = 2;
-      } else {
-        deno.index = 0;
-      }
-    } else {
-      if (deno.vx > 0) {
-        deno.index = 3;
-      } else {
-        deno.index = 1;
-      }
-    }
-
-    cnt++;
-  }
+  deno.tick();
+  deno.draw(canv);
 
   canv.present();
   tick()
-  // Deno.sleepSync(10);
 }
 
+let keyUp = false;
+let keyDown = false;
+let keyLeft = false;
+let keyRight = false;
+
+
 for (const event of window.events()) {
+  console.log(event.type)
   switch (event.type) {
     case EventType.Draw:
       frame();
+
+
+
+      
       break;
     case EventType.Quit:
       Deno.exit(0);
+      break;
+    case EventType.KeyDown:
+      const keycode = event.keysym.scancode
+      if (keycode === 80) {
+        deno.x -= speed;
+      }
+      if (keycode === 82) {
+        deno.y -= speed;
+      }
+      if (keycode === 79) {
+        deno.x += speed;
+      }
+      if (keycode === 81) {
+        deno.y += speed;
+      }
       break;
     default:
       break;
