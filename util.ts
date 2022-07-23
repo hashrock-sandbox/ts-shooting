@@ -36,9 +36,9 @@ export class Sprite {
     dest.copy(this.texture, this.frames[this.index], dst);
   }
 
-  tick() {
-    this.x += this.vx;
-    this.y += this.vy;
+  tick(delta: number) {
+    this.x += this.vx * delta / 1000;
+    this.y += this.vy * delta / 1000;
   }
 
   wrap(rect: Area) {

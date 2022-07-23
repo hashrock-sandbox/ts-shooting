@@ -23,6 +23,7 @@ const denoTextureFrames = [
   new Rect(40, 0, 40, 32),
 ];
 
+const bulletFrame = new Rect(120, 96, 24, 24);
 
 function random(min: number, max: number) {
   return (Math.random() * (max - min) + min) | 0;
@@ -34,12 +35,24 @@ function createDenoInstance() {
   deno.x = random(0, canvasSize.width);
   deno.y = random(0, canvasSize.height);
   deno.originX = deno.frames[0].width / 2;
-  deno.originY = deno.frames[0].height;
+  deno.originY = deno.frames[0].height + 8;
   deno.scale = 2;
   deno.vx = 0;
   deno.vy = 0;
   return deno;
 }
+
+function createBulletInstance(){
+  const bullet = new Sprite(texture, [bulletFrame]);
+  bullet.class = "bullet";
+  bullet.originX = bullet.frames[0].width / 2;
+  bullet.originY = bullet.frames[0].height;
+  bullet.scale = 2;
+  bullet.vx = 1500;
+  bullet.vy = 0;
+  return bullet;
+}
+
 
 const deno = createDenoInstance();
 
@@ -51,6 +64,8 @@ const KEYMAP = {
   "ArrowDown": 81,
   "ArrowLeft": 80,
   "ArrowRight": 79,
+  "Z": 29,
+  "Space": 44
 }
 
 class ObjectPool { 
@@ -93,6 +108,9 @@ class KeyboardStack {
   get arrowRight(){
     return this.isDown(KEYMAP.ArrowRight);
   }
+  get primary(){
+    return this.isDown(KEYMAP.Z) || this.isDown(KEYMAP.Space);
+  }
 }
 
 
@@ -104,8 +122,13 @@ function frame(delta: number) {
   canv.copy(bgTexture, new Rect(0, 0, canvasSize.width, canvasSize.height), new Rect(-scrollX + canvasSize.width, 0, canvasSize.width, canvasSize.height));
   scrollX = scrollX % canvasSize.width;
 
-  deno.tick();
+  deno.tick(delta);
   deno.draw(canv);
+
+  bullets.forEach(b => {
+    b.tick(delta);
+    b.draw(canv);
+  });
 
   canv.present();
   tick()
@@ -115,6 +138,10 @@ let scrollX = 0;
 const keyboard = new KeyboardStack()
 let time = 0;
 let lastTime = performance.now();
+
+const bullets: Sprite[] = [];
+let coolDown = 0;
+const coolDownTime = 200;
 
 for (const event of window.events()) {
   const now = performance.now();
@@ -137,6 +164,14 @@ for (const event of window.events()) {
       if(keyboard.arrowRight){
         deno.x += speedDelta;
       }
+      if(keyboard.primary && coolDown <= 0){
+        const bullet = createBulletInstance();
+        bullet.x = deno.x + 50;
+        bullet.y = deno.y;
+        bullets.push(bullet);
+        coolDown = coolDownTime;
+      }
+      coolDown -= delta;
 
       if(time % 500 === 0){
         deno.index = (deno.index + 1) % deno.frames.length;
