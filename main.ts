@@ -103,7 +103,6 @@ function createExplosionInstance(x: number, y: number) {
 
 const deno = createDenoInstance(100, 200);
 
-let cnt = 0;
 const speed = 400;
 const scrollSpeed = 100;
 const KEYMAP = {

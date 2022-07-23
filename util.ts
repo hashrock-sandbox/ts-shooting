@@ -105,29 +105,10 @@ export class Sprite {
 }
 
 export class Bullet extends Sprite {
-  // onHit(other: Sprite) {
-  //   this.destroy();
-  // }
 }
 
 export class Enemy extends Sprite {
   hp = 0;
-
-  onDestroy() {
-    this.eventListeners["destroy"]();
-  }
-
-  constructor(texture: Texture, frames: Rect[], origin?: Point, hp = 1) {
-    super(texture, frames, origin);
-    this.hp = hp;
-  }
-
-  // onHit(other: Sprite) {
-  //   this.hp -= 1;
-  //   if (this.hp <= 0) {
-  //     this.destroy();
-  //   }
-  // }
 }
 
 export class Explosion extends Sprite {}
