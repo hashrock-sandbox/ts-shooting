@@ -6,7 +6,7 @@ import {
   WindowBuilder,
 } from "https://deno.land/x/sdl2@0.5.1/mod.ts";
 import { FPS } from "https://deno.land/x/sdl2@0.5.1/examples/utils.ts";
-import { Bullet, Enemy, EnemyBullet, Explosion, Sprite } from "./util.ts";
+import { Bullet, Enemy, Enemy1, Enemy2, Enemy3, EnemyBullet, Explosion, Sprite } from "./util.ts";
 
 const canvasSize = { width: 640, height: 480 };
 const window = new WindowBuilder(
@@ -27,6 +27,7 @@ const tick = FPS();
 const denoTextureFrames = [new Rect(0, 0, 40, 32), new Rect(40, 0, 40, 32)];
 
 const bulletFrame = new Rect(120, 96, 24, 24);
+const ufoFrame = new Rect(80, 0, 40, 32);
 const enemyBulletFrame = new Rect(96, 96, 24, 24);
 const missileFrames = [new Rect(48, 96, 24, 24), new Rect(72, 96, 24, 24)];
 const bugFrames = [new Rect(0, 96, 24, 24), new Rect(24, 96, 24, 24)];
@@ -84,7 +85,7 @@ function createBulletInstance(x: number, y: number) {
 }
 
 function createBugInstance(x: number, y: number) {
-  const bug = new Enemy(texture, bugFrames);
+  const bug = new Enemy1(texture, bugFrames);
   bug.class = "bug";
   bug.scale = 2;
   bug.vx = -50;
@@ -93,6 +94,30 @@ function createBugInstance(x: number, y: number) {
   bug.y = y;
   bug.collisionSize = 8;
   bug.hp = 10;
+  return bug;
+}
+function createUfoInstance(x: number, y: number) {
+  const bug = new Enemy3(texture, [ufoFrame]);
+  bug.class = "ufo";
+  bug.scale = 2;
+  bug.vx = -200;
+  bug.vy = 0;
+  bug.x = x;
+  bug.y = y;
+  bug.collisionSize = 8;
+  bug.hp = 10;
+  return bug;
+}
+function createMissileInstance(x: number, y: number) {
+  const bug = new Enemy2(texture, missileFrames);
+  bug.class = "missile";
+  bug.scale = 2;
+  bug.vx = -50;
+  bug.vy = 0;
+  bug.x = x;
+  bug.y = y;
+  bug.collisionSize = 8;
+  bug.hp = 2;
   return bug;
 }
 
@@ -366,6 +391,42 @@ for (const event of window.events()) {
         });
         enemyPool.add(bug);
       }
+
+      if (time % 5000 === 0) {
+        const missile = createMissileInstance(
+          canvasSize.width,
+          random(0, canvasSize.height)
+        );
+        missile.addEventListener("hit", () => {
+          missile.hp -= 1;
+          if (missile.hp <= 0) {
+            missile.destroy();
+          }
+        });
+        missile.addEventListener("destroy", () => {
+          const explosion = createExplosionInstance(missile.x, missile.y);
+          explosionPool.add(explosion);
+        });
+        enemyPool.add(missile);
+      }
+      if (time % 20000 === 0) {
+        const missile = createUfoInstance(
+          canvasSize.width,
+          random(0, canvasSize.height)
+        );
+        missile.addEventListener("hit", () => {
+          missile.hp -= 1;
+          if (missile.hp <= 0) {
+            missile.destroy();
+          }
+        });
+        missile.addEventListener("destroy", () => {
+          const explosion = createExplosionInstance(missile.x, missile.y);
+          explosionPool.add(explosion);
+        });
+        enemyPool.add(missile);
+      }
+
 
       lastTime = now;
       break;

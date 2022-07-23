@@ -123,12 +123,36 @@ export class Bullet extends Sprite {
 export class Enemy extends Sprite {
   hp = 0;
 
+}
+
+export class Enemy1 extends Enemy {
+  hp = 0;
+
 
   override tick(delta: number): void {
     super.tick(delta);
     this.vy = Math.sin(this.aliveTime / 100) * 50;
   }
 }
+
+export class Enemy2 extends Enemy {
+  hp = 0;
+
+
+  override tick(delta: number): void {
+    super.tick(delta);
+    this.vx -= 0.1;
+  }
+}
+export class Enemy3 extends Enemy {
+  hp = 0;
+
+  override tick(delta: number): void {
+    super.tick(delta);
+    // this.vx *= 0.99
+  }
+}
+
 
 export class EnemyBullet extends Sprite {
 
