@@ -63,6 +63,17 @@ function createBulletInstance(x: number, y: number) {
   return bullet;
 }
 
+function createBugInstance(x: number, y: number ){
+  const bug = new Sprite(texture, bugFrames);
+  bug.class = "bug";
+  bug.scale = 2;
+  bug.vx = -50;
+  bug.vy = 0;
+  bug.x = x;
+  bug.y = y;
+  return bug;
+}
+
 
 const deno = createDenoInstance(100, 200);
 
@@ -150,6 +161,9 @@ function frame(delta: number) {
   deno.tick(delta);
   deno.draw(canv);
 
+  enemyPool.tickAll(delta);
+  enemyPool.drawAll(canv);
+
   bulletsPool.tickAll(delta);
   bulletsPool.drawAll(canv);
   bulletsPool.removeOutOfBound(new Rect(0, 0, canvasSize.width, canvasSize.height));
@@ -167,6 +181,10 @@ let coolDown = 0;
 const coolDownTime = 50;
 const bulletsPool = new ObjectPool();
 const bulletsMax = 2;
+
+
+const enemyPool = new ObjectPool();
+
 
 for (const event of window.events()) {
   const now = performance.now();
@@ -198,6 +216,11 @@ for (const event of window.events()) {
 
       if(time % 500 === 0){
         deno.index = (deno.index + 1) % deno.frames.length;
+      }
+
+      if(time % 10000 === 0){
+        const bug = createBugInstance( canvasSize.width, random(0, canvasSize.height));
+        enemyPool.add(bug);
       }
 
       lastTime = now;

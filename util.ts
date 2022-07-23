@@ -25,6 +25,8 @@ export class Sprite {
   frames: Rect[];
   class = "";
   index = 0;
+  aliveTime = 0;
+  animationSpeed = 100;
 
   constructor(texture: Texture, frames: Rect[], origin?: Point) {
     this.texture = texture;
@@ -52,6 +54,9 @@ export class Sprite {
   tick(delta: number) {
     this.x += this.vx * delta / 1000;
     this.y += this.vy * delta / 1000;
+
+    this.aliveTime += delta;
+    this.index = Math.floor(this.aliveTime / this.animationSpeed) % this.frames.length;
   }
 
   wrap(rect: Area) {
