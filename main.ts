@@ -1,6 +1,6 @@
 import { Canvas, EventType, Rect, Surface, WindowBuilder } from "https://deno.land/x/sdl2@0.5.1/mod.ts";
 import { FPS } from "https://deno.land/x/sdl2@0.5.1/examples/utils.ts";
-import { Sprite } from "./util.ts";
+import { Bullet, Enemy, Explosion, Sprite } from "./util.ts";
 
 const canvasSize = { width: 640, height: 480 };
 const window = new WindowBuilder(
@@ -53,24 +53,26 @@ function createDenoInstance(x: number, y: number) {
 }
 
 function createBulletInstance(x: number, y: number) {
-  const bullet = new Sprite(texture, [bulletFrame]);
+  const bullet = new Bullet(texture, [bulletFrame]);
   bullet.class = "bullet";
   bullet.scale = 2;
   bullet.vx = 1500;
   bullet.vy = 0;
   bullet.x = x;
   bullet.y = y;
+  bullet.collisionSize = 8;
   return bullet;
 }
 
 function createBugInstance(x: number, y: number ){
-  const bug = new Sprite(texture, bugFrames);
+  const bug = new Enemy(texture, bugFrames);
   bug.class = "bug";
   bug.scale = 2;
   bug.vx = -50;
   bug.vy = 0;
   bug.x = x;
   bug.y = y;
+  bug.collisionSize = 8;
   return bug;
 }
 
@@ -89,13 +91,20 @@ const KEYMAP = {
   "Space": 44
 }
 
-class ObjectPool { 
-  pool: Sprite[] = [];
+class ObjectPool<T extends Sprite> {
+  cleanUp() {
+    const destroyed = this.pool.filter(s => s.destroyFlag);
+    destroyed.forEach(s => s.onDestroy());
+
+
+    this.pool = this.pool.filter(s => s.destroyFlag === false);
+  } 
+  pool: T[] = [];
   
-  add(sprite: Sprite) {
+  add(sprite: T) {
     this.pool.push(sprite);
   }
-  remove(sprite: Sprite) {
+  remove(sprite: T) {
     this.pool = this.pool.filter(s => s !== sprite);
   }
   tickAll(delta: number) {
@@ -149,6 +158,16 @@ class KeyboardStack {
   }
 }
 
+function checkCollision<T extends Sprite>(a: ObjectPool<T>, b: ObjectPool<T>){
+  a.pool.forEach(a => {
+    b.pool.forEach(b => {
+      if(a.isHit(b)){
+        a.onHit(b);
+        b.onHit(a);
+      }
+    });
+  });
+}
 
 function frame(delta: number) {
   canv.clear();
@@ -168,6 +187,11 @@ function frame(delta: number) {
   bulletsPool.drawAll(canv);
   bulletsPool.removeOutOfBound(new Rect(0, 0, canvasSize.width, canvasSize.height));
 
+  checkCollision(enemyPool, bulletsPool);
+
+  bulletsPool.cleanUp();
+  enemyPool.cleanUp();
+
   canv.present();
   tick()
 }
@@ -179,11 +203,13 @@ let lastTime = performance.now();
 
 let coolDown = 0;
 const coolDownTime = 50;
-const bulletsPool = new ObjectPool();
+const bulletsPool = new ObjectPool<Bullet>();
 const bulletsMax = 2;
 
 
-const enemyPool = new ObjectPool();
+const enemyPool = new ObjectPool<Enemy>();
+
+const explosionPool = new ObjectPool<Explosion>();
 
 
 for (const event of window.events()) {
@@ -220,6 +246,9 @@ for (const event of window.events()) {
 
       if(time % 10000 === 0){
         const bug = createBugInstance( canvasSize.width, random(0, canvasSize.height));
+        bug.onDestroy = (self: Enemy) => {
+          explosionPool.add( createExplosion(self.x, self.y));
+        }
         enemyPool.add(bug);
       }
 
@@ -237,4 +266,8 @@ for (const event of window.events()) {
     default:
       break;
   }
+}
+
+function createExplosion(x: number,y: number): Explosion {
+throw new Error("Function not implemented.");
 }
